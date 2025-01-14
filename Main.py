@@ -54,7 +54,7 @@ class VirtualPetGUI:
         self.pet = VirtualPet("Fluffy")
 
         # Numele pisicii
-        self.name_label = tk.Label(self.root, text=self.pet.name, font=("Arial", 20, "bold"), bg='black', fg="white")
+        self.name_label = tk.Label(self.root, text=self.pet.name, font=("8514oem Regular", 20, "bold"), bg='black', fg="white")
         self.name_label.pack(pady=10)
 
         # Cadru principal
@@ -65,16 +65,16 @@ class VirtualPetGUI:
         self.button_frame = tk.Frame(self.main_frame, bg='black')
         self.button_frame.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.Y)
 
-        self.feed_button = tk.Button(self.button_frame, text="FEED", command=self.feed_pet, font=("Arial", 10), width=10, bg="#f76c6c", fg="white")
+        self.feed_button = tk.Button(self.button_frame, text="FEED", command=self.feed_pet, font=("8514oem Regular", 10), width=10, bg="#f76c6c", fg="white")
         self.feed_button.pack(pady=5)
 
-        self.play_button = tk.Button(self.button_frame, text="PET", command=self.play_pet, font=("Arial", 10), width=10, bg="#355c7d", fg="white")
+        self.play_button = tk.Button(self.button_frame, text="PET", command=self.play_pet, font=("8514oem Regular", 10), width=10, bg="#355c7d", fg="white")
         self.play_button.pack(pady=5)
 
-        self.sleep_button = tk.Button(self.button_frame, text="SLEEP", command=self.sleep_pet, font=("Arial", 10), width=10, bg="#6c5b7b", fg="white")
+        self.sleep_button = tk.Button(self.button_frame, text="SLEEP", command=self.sleep_pet, font=("8514oem Regular", 10), width=10, bg="#6c5b7b", fg="white")
         self.sleep_button.pack(pady=5)
 
-        self.message_label = tk.Label(self.main_frame, text="", font=("Arial", 14), bg='black', fg="white",
+        self.message_label = tk.Label(self.main_frame, text="", font=("8514oem Regular", 14), bg='black', fg="white",
                                       justify=tk.CENTER)
         self.message_label.pack(side=tk.BOTTOM, padx=10, pady=5, anchor=tk.CENTER)
 
@@ -83,7 +83,7 @@ class VirtualPetGUI:
         self.animation_label.pack(side=tk.LEFT, expand=True)
 
         # Statusurile pisicii
-        self.status_label = tk.Label(self.main_frame, text=self.pet.get_status(), font=("Arial", 14), bg='black', fg="white", justify=tk.LEFT)
+        self.status_label = tk.Label(self.main_frame, text=self.pet.get_status(), font=("8514oem Regular", 14), bg='black', fg="white", justify=tk.LEFT)
         self.status_label.pack(side=tk.RIGHT, padx=10, pady=10)
 
         # Animația curentă
