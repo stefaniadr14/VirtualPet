@@ -1,5 +1,6 @@
 import tkinter as tk
-from PIL import Image, ImageTk  # Necesită instalarea Pillow: `pip install pillow`
+from PIL import Image, ImageTk, ImageSequence
+
 
 class VirtualPet:
     def __init__(self, name):
@@ -7,15 +8,15 @@ class VirtualPet:
         self.hunger = 50
         self.energy = 50
         self.happiness = 50
-        self.state = "idle"  # Starea curentă: idle, eat, sleep, etc.
+        self.state = "idle"
 
     def feed(self):
         if self.hunger > 0:
             self.hunger = max(0, self.hunger - 10)
             self.happiness = min(100, self.happiness + 5)
             self.state = "eat"
-            return f"L-ai hrănit pe {self.name}!"
-        return f"{self.name} nu este flămând acum."
+            return f"You fed {self.name}!"
+        return f"{self.name} is not hungry anymore."
 
     def play(self):
         if self.energy > 10:
@@ -23,142 +24,168 @@ class VirtualPet:
             self.energy = max(0, self.energy - 15)
             self.hunger = min(100, self.hunger + 5)
             self.state = "idle"
-            return f"Te-ai jucat cu {self.name}!"
-        return f"{self.name} este prea obosit pentru a se juca."
+            return f"You pet {self.name}!"
+        return f"{self.name} is too tired."
 
     def sleep(self):
-        if self.energy < 100:
+        if self.energy < 95:
             self.energy = min(100, self.energy + 20)
             self.hunger = min(100, self.hunger + 10)
             self.state = "sleep"
-            return f"{self.name} a dormit și și-a refăcut energia!"
-        return f"{self.name} nu are nevoie de somn acum."
+            return f"{self.name} is sleeping."
+        return f"{self.name} doesn't need sleep."
 
     def get_status(self):
-        return f"{self.name} - Foame: {self.hunger} | Energie: {self.energy} | Fericire: {self.happiness}"
+        return f"Hunger: {self.hunger}\nEnergy: {self.energy}\nHappiness: {self.happiness}"
+
+    def update_pet_status(self):
+        self.hunger = min(100, self.hunger + 1)
+        self.energy = max(0, self.energy - 1)
+        self.happiness = max(0, self.happiness - 1)
 
 
 class VirtualPetGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Virtual Pet")
-        self.root.geometry("500x600")
+        self.root.geometry("600x400")
+        self.root.config(bg='black')
 
-        # Dicționar pentru animații
-        self.animations = {
-            "idle": self.load_gif("Idle.gif"),
-            "eat": self.load_gif("eat.gif"),
-            "sleep": self.load_gif("sleep.gif"),
-            "idle_to_sleep": self.load_gif("Idle_sleep.gif"),
-            "sleep_to_idle": self.load_gif("sleep_idle.gif"),
-            "pet": self.load_gif("pet.gif"),
-        }
+        self.pet = VirtualPet("Fluffy")
 
-        self.pet = VirtualPet("Pisicuța Fluffy")
+        # Numele pisicii
+        self.name_label = tk.Label(self.root, text=self.pet.name, font=("Arial", 20, "bold"), bg='black', fg="white")
+        self.name_label.pack(pady=10)
 
-        # Etichetă pentru animație
-        self.animation_label = tk.Label(root, bg="#a8d0e6")
-        self.animation_label.pack(pady=20)
+        # Cadru principal
+        self.main_frame = tk.Frame(self.root, bg='black')
+        self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Etichetă cu statistici
-        self.status_label = tk.Label(root, text=self.pet.get_status(), font=("Arial", 14), bg="#f8f1f1", bd=1, relief="solid")
-        self.status_label.pack(pady=10)
+        # Cadru pentru butoane
+        self.button_frame = tk.Frame(self.main_frame, bg='black')
+        self.button_frame.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.Y)
 
-        # Mesaj de acțiune
-        self.message_label = tk.Label(root, text="", font=("Arial", 12), fg="green", bg="#f8f1f1")
-        self.message_label.pack(pady=5)
-
-        # Butoane pentru acțiuni
-        self.feed_button = tk.Button(root, text="Hrănește", command=self.feed_pet, width=15, font=("Arial", 12), bg="#f76c6c", fg="white")
+        self.feed_button = tk.Button(self.button_frame, text="FEED", command=self.feed_pet, font=("Arial", 10), width=10, bg="#f76c6c", fg="white")
         self.feed_button.pack(pady=5)
 
-        self.play_button = tk.Button(root, text="Joacă-te", command=self.play_pet, width=15, font=("Arial", 12), bg="#355c7d", fg="white")
+        self.play_button = tk.Button(self.button_frame, text="PET", command=self.play_pet, font=("Arial", 10), width=10, bg="#355c7d", fg="white")
         self.play_button.pack(pady=5)
 
-        self.sleep_button = tk.Button(root, text="Dorm", command=self.sleep_pet, width=15, font=("Arial", 12), bg="#6c5b7b", fg="white")
+        self.sleep_button = tk.Button(self.button_frame, text="SLEEP", command=self.sleep_pet, font=("Arial", 10), width=10, bg="#6c5b7b", fg="white")
         self.sleep_button.pack(pady=5)
+
+        self.message_label = tk.Label(self.main_frame, text="", font=("Arial", 14), bg='black', fg="white",
+                                      justify=tk.CENTER)
+        self.message_label.pack(side=tk.BOTTOM, padx=10, pady=5, anchor=tk.CENTER)
+
+        # Etichetă pentru animație
+        self.animation_label = tk.Label(self.main_frame, bg='black')
+        self.animation_label.pack(side=tk.LEFT, expand=True)
+
+        # Statusurile pisicii
+        self.status_label = tk.Label(self.main_frame, text=self.pet.get_status(), font=("Arial", 14), bg='black', fg="white", justify=tk.LEFT)
+        self.status_label.pack(side=tk.RIGHT, padx=10, pady=10)
 
         # Animația curentă
         self.current_animation = None
         self.animation_index = 0
         self.animation_timer = None
 
-        # Redăm starea inițială
+        # Încarcă animațiile
+        self.animations = {
+            "idle": self.load_gif("Idle.gif"),
+            "eat": self.load_gif("eat.gif"),
+            "sleep": self.load_gif("sleep.gif"),
+            "pet": self.load_gif("pet.gif")
+        }
+
         self.play_animation("idle")
         self.update_status()
 
-    def load_gif(self, file_path):
-        """Încarcă toate cadrele unui GIF."""
+    def load_gif(self, file_path, scale=(300, 300)):
         gif = Image.open(file_path)
         frames = []
         try:
             while True:
-                frames.append(ImageTk.PhotoImage(gif.copy()))
+                frame = gif.copy()
+                frame = frame.convert("RGBA")  # Convertim în format RGBA pentru transparență
+                frame = frame.resize(scale, Image.Resampling.LANCZOS)
+                transparent = Image.new("RGBA", frame.size, (0, 0, 0, 0))  # Fundal transparent
+                transparent.paste(frame, mask=frame.split()[3])  # Aplicăm transparența
+                frames.append(ImageTk.PhotoImage(transparent))
                 gif.seek(len(frames))  # Treci la următorul cadru
         except EOFError:
             pass
         return frames
 
-    def play_animation(self, animation_name, duration=5):
-        """Redă animația specificată și revine la idle după durata specificată."""
-        if animation_name != self.current_animation:
-            self.current_animation = animation_name
-            self.animation_index = 0
-
+    def play_animation(self, animation_name, loop=False, loop_count=1, duration=None):
+        """Redă animația specificată. Poate face bucle limitate sau continue."""
         frames = self.animations[animation_name]
+        if not hasattr(self, 'current_loop_count'):
+            self.current_loop_count = 0
+
         if frames:
             frame = frames[self.animation_index]
             self.animation_label.config(image=frame)
             self.animation_index = (self.animation_index + 1) % len(frames)
 
-            # Actualizare cadru o dată pe secundă
-            self.animation_timer = self.root.after(1000, lambda: self.play_animation(animation_name, duration))
+            # Incrementăm contorul de bucle dacă animația a parcurs toate cadrele
+            if self.animation_index == 0 and not loop:
+                self.current_loop_count += 1
 
-        # După durata specificată, revine la idle
-        if self.animation_index == 0 and animation_name != "idle":
-            self.root.after(duration * 1000, lambda: self.play_animation("idle"))
-
-    def stop_animation(self):
-        """Oprește animația curentă."""
-        if self.animation_timer:
-            self.root.after_cancel(self.animation_timer)
+            # Continuăm redarea dacă trebuie să buclăm sau nu am ajuns la numărul maxim de bucle
+            if loop or (self.current_loop_count < loop_count):
+                self.animation_timer = self.root.after(500,
+                                                       lambda: self.play_animation(animation_name, loop, loop_count,
+                                                                                   duration))
+            else:
+                # Resetăm contorul și revenim la animația 'idle' după durata specificată
+                self.current_loop_count = 0
+                if duration:
+                    self.root.after(duration, lambda: self.play_animation("idle", loop=True))
+                else:
+                    self.play_animation("idle", loop=True)
 
     def feed_pet(self):
         message = self.pet.feed()
-        self.message_label.config(text=message, fg="green")
+        self.message_label.config(text=message)
+        if message == f"{self.pet.name} is not hungry anymore.":
+            return
         self.stop_animation()
-        self.play_animation("eat", duration=3)
-        self.update_status()
+        self.animation_index = 0
+        self.play_animation("eat", loop=False, duration=100)
 
     def play_pet(self):
         message = self.pet.play()
-        self.message_label.config(text=message, fg="green")
+        self.message_label.config(text=message)
+        if message == f"{self.pet.name} is too tired.":
+            return
         self.stop_animation()
-        self.play_animation("pet", duration=3)
-        self.update_status()
+        self.animation_index = 0
+        self.play_animation("pet", loop=False, duration=100)
 
     def sleep_pet(self):
         message = self.pet.sleep()
-        self.message_label.config(text=message, fg="green")
+        self.message_label.config(text=message)
+        if message == f"{self.pet.name} doesn't need sleep.":
+            return
         self.stop_animation()
-        self.play_animation("idle_to_sleep", duration=2)  # Tranziția durează 2 secunde
-        self.play_animation("sleep", duration=6)  # După tranziție, redă somnul
-        self.stop_animation()
-        self.play_animation("sleep_to_idle", duration=5)  # Revine la idle după 5 secunde
-        self.update_status()
+        self.animation_index = 0
+        self.play_animation("sleep", loop=False, loop_count=3, duration=None)
+
+
+    def stop_animation(self):
+        if self.animation_timer:
+            self.root.after_cancel(self.animation_timer)
+        self.animation_timer = None
 
     def update_status(self):
+        self.pet.update_pet_status()
         self.status_label.config(text=self.pet.get_status())
-        self.root.after(1000, self.pass_time)
-
-    def pass_time(self):
-        self.pet.hunger = min(100, self.pet.hunger + 1)
-        self.pet.energy = max(0, self.pet.energy - 1)
-        self.pet.happiness = max(0, self.pet.happiness - 1)
-        self.update_status()
+        self.root.after(2000, self.update_status)
 
 
 if __name__ == "__main__":
     root = tk.Tk()
-    gui = VirtualPetGUI(root)
+    app = VirtualPetGUI(root)
     root.mainloop()
