@@ -181,6 +181,7 @@ class VirtualPetGUI:
             new_name = name_entry.get()
             if new_name.strip():
                 if len(new_name) > 6:
+                    self.pet.energy = min(100, self.pet.energy - 4)
                     self.message_label.config(text=f"The name is too confusing for {self.pet.name}! Try another.")
                     popup.destroy()
                     self.change_name()
