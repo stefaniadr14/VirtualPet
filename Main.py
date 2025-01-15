@@ -1,6 +1,6 @@
 import tkinter as tk
 from PIL import Image, ImageTk, ImageSequence
-
+import random
 
 class VirtualPet:
     def __init__(self, name):
@@ -35,6 +35,10 @@ class VirtualPet:
             return f"{self.name} is sleeping."
         return f"{self.name} doesn't need sleep."
 
+    def change_name(self, new_name):
+        self.name = new_name
+        return f"The name has been changed to {self.name}!"
+
     def get_status(self):
         return f"Hunger: {self.hunger}\nEnergy: {self.energy}\nHappiness: {self.happiness}"
 
@@ -65,14 +69,17 @@ class VirtualPetGUI:
         self.button_frame = tk.Frame(self.main_frame, bg='black')
         self.button_frame.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.Y)
 
-        self.feed_button = tk.Button(self.button_frame, text="FEED", command=self.feed_pet, font=("8514oem Regular", 10), width=10, bg="#f76c6c", fg="white")
+        self.feed_button = tk.Button(self.button_frame, text="FEED", command=self.feed_pet, font=("8514oem Regular", 10), width=12, bg="#f76c6c", fg="white")
         self.feed_button.pack(pady=5)
 
-        self.play_button = tk.Button(self.button_frame, text="PET", command=self.play_pet, font=("8514oem Regular", 10), width=10, bg="#355c7d", fg="white")
+        self.play_button = tk.Button(self.button_frame, text="PET", command=self.play_pet, font=("8514oem Regular", 10), width=12, bg="#355c7d", fg="white")
         self.play_button.pack(pady=5)
 
-        self.sleep_button = tk.Button(self.button_frame, text="SLEEP", command=self.sleep_pet, font=("8514oem Regular", 10), width=10, bg="#6c5b7b", fg="white")
+        self.sleep_button = tk.Button(self.button_frame, text="SLEEP", command=self.sleep_pet, font=("8514oem Regular", 10), width=12, bg="#6c5b7b", fg="white")
         self.sleep_button.pack(pady=5)
+
+        self.change_name_button = tk.Button(self.button_frame, text="CHANGE NAME", command=self.change_name, font=("8514oem Regular", 10), width=12, bg="#8e44ad", fg="white")
+        self.change_name_button.pack(pady=5)
 
         self.message_label = tk.Label(self.main_frame, text="", font=("8514oem Regular", 14), bg='black', fg="white",
                                       justify=tk.CENTER)
@@ -119,7 +126,6 @@ class VirtualPetGUI:
         return frames
 
     def play_animation(self, animation_name, loop=False, loop_count=1, duration=None):
-        """Redă animația specificată. Poate face bucle limitate sau continue."""
         frames = self.animations[animation_name]
         if not hasattr(self, 'current_loop_count'):
             self.current_loop_count = 0
@@ -129,17 +135,14 @@ class VirtualPetGUI:
             self.animation_label.config(image=frame)
             self.animation_index = (self.animation_index + 1) % len(frames)
 
-            # Incrementăm contorul de bucle dacă animația a parcurs toate cadrele
             if self.animation_index == 0 and not loop:
                 self.current_loop_count += 1
 
-            # Continuăm redarea dacă trebuie să buclăm sau nu am ajuns la numărul maxim de bucle
             if loop or (self.current_loop_count < loop_count):
                 self.animation_timer = self.root.after(500,
                                                        lambda: self.play_animation(animation_name, loop, loop_count,
                                                                                    duration))
             else:
-                # Resetăm contorul și revenim la animația 'idle' după durata specificată
                 self.current_loop_count = 0
                 if duration:
                     self.root.after(duration, lambda: self.play_animation("idle", loop=True))
@@ -173,6 +176,41 @@ class VirtualPetGUI:
         self.animation_index = 0
         self.play_animation("sleep", loop=False, loop_count=3, duration=None)
 
+    def change_name(self):
+        def submit_name():
+            new_name = name_entry.get()
+            if new_name.strip():
+                if len(new_name) > 6:
+                    self.message_label.config(text=f"The name is too confusing for {self.pet.name}! Try another.")
+                    popup.destroy()
+                    self.change_name()
+                elif random.randint(1, 100) <= 30:  # 30% șansă să nu-i placă
+                    self.pet.happiness = min(100, self.pet.happiness - 4)
+                    self.message_label.config(text=f"{self.pet.name} doesn't like this name! Try another.")
+                    popup.destroy()
+                    self.change_name()
+                else:
+                    message = self.pet.change_name(new_name)
+                    self.pet.happiness = min(100, self.pet.happiness + 7)
+                    self.name_label.config(text=self.pet.name)
+                    self.message_label.config(text=message)
+                    self.play_animation("pet", loop=False, loop_count=2, duration=200)
+                    popup.destroy()
+            else:
+                self.message_label.config(text="Name cannot be empty!")
+
+        popup = tk.Toplevel(self.root)
+        popup.title("Change Name")
+        popup.geometry("300x150")
+        popup.config(bg='black')
+
+        tk.Label(popup, text="Enter new name:", font=("8514oem Regular", 12), bg='black', fg="white").pack(pady=10)
+        name_entry = tk.Entry(popup, font=("8514oem Regular", 12))
+        name_entry.pack(pady=5)
+
+        submit_button = tk.Button(popup, text="Submit", command=submit_name, font=("8514oem Regular", 10), bg="#27ae60",
+                                  fg="white")
+        submit_button.pack(pady=10)
 
     def stop_animation(self):
         if self.animation_timer:
